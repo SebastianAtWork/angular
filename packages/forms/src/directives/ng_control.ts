@@ -27,12 +27,16 @@ function unimplemented(): any {
 export abstract class NgControl extends AbstractControlDirective {
   /** @internal */
   _parent: ControlContainer|null = null;
-  name: string|null = null;
+  /** @internal */
+  _name: string|null = null;
   valueAccessor: ControlValueAccessor|null = null;
   /** @internal */
   _rawValidators: Array<Validator|ValidatorFn> = [];
   /** @internal */
   _rawAsyncValidators: Array<AsyncValidator|AsyncValidatorFn> = [];
+
+  set name(value: string|null) { this._name = value; }
+  get name(): string|null { return this._name; }
 
   get validator(): ValidatorFn|null { return <ValidatorFn>unimplemented(); }
   get asyncValidator(): AsyncValidatorFn|null { return <AsyncValidatorFn>unimplemented(); }

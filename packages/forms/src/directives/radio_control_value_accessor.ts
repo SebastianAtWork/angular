@@ -97,10 +97,23 @@ export class RadioControlValueAccessor implements ControlValueAccessor,
   _control: NgControl;
   /** @internal */
   _fn: Function;
+  /** @internal */
+  _name: string;
   onChange = () => {};
   onTouched = () => {};
 
-  @Input() name: string;
+  @Input()
+  set name(value: string) {
+    this._name = value;
+    if (value) {
+      this._renderer.setAttribute(this._elementRef.nativeElement, 'name', value);
+    } else {
+      this._renderer.removeAttribute(this._elementRef.nativeElement, 'name');
+    }
+  }
+
+  get name(): string { return this._name; }
+
   @Input() formControlName: string;
   @Input() value: any;
 
@@ -138,10 +151,10 @@ export class RadioControlValueAccessor implements ControlValueAccessor,
   }
 
   private _checkName(): void {
-    if (this.name && this.formControlName && this.name !== this.formControlName) {
+    if (this._name && this.formControlName && this._name !== this.formControlName) {
       this._throwNameError();
     }
-    if (!this.name && this.formControlName) this.name = this.formControlName;
+    if (!this._name && this.formControlName) this._name = this.formControlName;
   }
 
   private _throwNameError(): void {
