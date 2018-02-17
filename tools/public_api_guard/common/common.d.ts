@@ -251,6 +251,7 @@ export declare class NgComponentOutlet implements OnChanges, OnDestroy {
 
 /** @stable */
 export declare class NgForOf<T> implements DoCheck, OnChanges {
+    ngForDefault: TemplateRef<void>;
     ngForOf: NgIterable<T>;
     ngForTemplate: TemplateRef<NgForOfContext<T>>;
     ngForTrackBy: TrackByFunction<T>;

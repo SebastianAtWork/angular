@@ -76,14 +76,19 @@ export class NgForOfContext<T> {
  * `trackBy` takes a function which has two arguments: `index` and `item`.
  * If `trackBy` is given, Angular tracks changes by the return value of the function.
  *
+ * To display specific content when the given `Iterable` is of zero length, `NgForOf` supports
+ * `default` option.
+ * `default` takes a template reference to an `<ng-template>` element.
+ *
  * ### Syntax
  *
- * - `<li *ngFor="let item of items; index as i; trackBy: trackByFn">...</li>`
+ * - `<li *ngFor="let item of items; index as i; trackBy: trackByFn; default: templateRef">...</li>`
  *
  * With `<ng-template>` element:
  *
  * ```
- * <ng-template ngFor let-item [ngForOf]="items" let-i="index" [ngForTrackBy]="trackByFn">
+ * <ng-template ngFor let-item [ngForOf]="items" let-i="index" [ngForTrackBy]="trackByFn"
+ * [ngForDefault]="templateRef">
  *   <li>...</li>
  * </ng-template>
  * ```
@@ -113,8 +118,17 @@ export class NgForOf<T> implements DoCheck, OnChanges {
 
   get ngForTrackBy(): TrackByFunction<T> { return this._trackByFn; }
 
+  @Input()
+  set ngForDefault(value: TemplateRef<void>) {
+    if (value) {
+      this._defaultBlockTemplate = value;
+    }
+  }
+
   private _differ: IterableDiffer<T>|null = null;
   private _trackByFn: TrackByFunction<T>;
+  private _defaultBlockTemplate: TemplateRef<void>|null = null;
+  private _defaultBlockView: EmbeddedViewRef<void>|null = null;
 
   constructor(
       private _viewContainer: ViewContainerRef, private _template: TemplateRef<NgForOfContext<T>>,
@@ -148,7 +162,17 @@ export class NgForOf<T> implements DoCheck, OnChanges {
   ngDoCheck(): void {
     if (this._differ) {
       const changes = this._differ.diff(this.ngForOf);
-      if (changes) this._applyChanges(changes);
+      if (changes) {
+        if (this._defaultBlockView) {
+          this._viewContainer.remove(this._viewContainer.indexOf(this._defaultBlockView));
+          this._defaultBlockView = null;
+        }
+        this._applyChanges(changes);
+      }
+      if (this._defaultBlockTemplate && !this._defaultBlockView &&
+          this._viewContainer.length === 0) {
+        this._defaultBlockView = this._viewContainer.createEmbeddedView(this._defaultBlockTemplate);
+      }
     }
   }
 
