@@ -36,11 +36,15 @@ export const $GT = 62;
 export const $QUESTION = 63;
 
 export const $0 = 48;
+export const $1 = 49;
+export const $7 = 55;
 export const $9 = 57;
 
 export const $A = 65;
+export const $B = 66;
 export const $E = 69;
 export const $F = 70;
+export const $O = 79;
 export const $X = 88;
 export const $Z = 90;
 
@@ -51,9 +55,11 @@ export const $CARET = 94;
 export const $_ = 95;
 
 export const $a = 97;
+export const $b = 98;
 export const $e = 101;
 export const $f = 102;
 export const $n = 110;
+export const $o = 111;
 export const $r = 114;
 export const $t = 116;
 export const $u = 117;
@@ -86,4 +92,12 @@ export function isAsciiLetter(code: number): boolean {
 
 export function isAsciiHexDigit(code: number): boolean {
   return code >= $a && code <= $f || code >= $A && code <= $F || isDigit(code);
+}
+
+export function isOctalDigit(code: number): boolean {
+  return $0 <= code && code <= $7;
+}
+
+export function isBinaryDigit(code: number): boolean {
+  return $0 <= code && code <= $1;
 }
