@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
-import {SecurityContext} from '@angular/core';
+import {SecurityContext, WrappedValue} from '@angular/core';
 import {ArgumentType, BindingFlags, NodeCheckFn, NodeFlags, Services, ViewData, ViewFlags, ViewState, asElementData, directiveDef, elementDef, rootRenderNodes} from '@angular/core/src/view/index';
 import {getDOM} from '@angular/platform-browser/src/dom/dom_adapter';
 
@@ -165,6 +165,36 @@ const addEventListener = '__zone_symbol__addEventListener' as 'addEventListener'
             .toThrowError(
                 `ExpressionChangedAfterItHasBeenCheckedError: Expression has changed after it was checked. Previous value: 'p3: v1'. Current value: 'p3: v2'.`);
       });
+
+      // fixes https://github.com/angular/angular/issues/15721
+      it('should not throw when old value is wrapped while the new one is same unwrapped value',
+         () => {
+           let value: any;
+           class AComp {}
+
+           const update =
+               jasmine.createSpy('updater').and.callFake((check: NodeCheckFn, view: ViewData) => {
+                 check(view, 0, ArgumentType.Inline, 'const', 'const', value);
+               });
+
+           const {view, rootNodes} = createAndGetRootNodes(
+          compViewDef([
+            elementDef(0, NodeFlags.None, null, null, 1, 'div', null, null, null, null, () => compViewDef([
+                elementDef(0, NodeFlags.None, null, null, 0, 'span', null, [
+                 [BindingFlags.TypeElementAttribute, 'p1', SecurityContext.NONE],
+                [BindingFlags.TypeElementAttribute, 'p2', SecurityContext.NONE],
+                [BindingFlags.TypeElementAttribute, 'p3', SecurityContext.NONE],
+              ]),
+              ], null, update)
+            ),
+            directiveDef(1, NodeFlags.Component, null, 0, AComp, []),
+          ]));
+
+           value = WrappedValue.wrap('v1');
+           Services.checkAndUpdateView(view);
+           value = 'v1';
+           expect(() => Services.checkNoChangesView(view)).not.toThrowError();
+         });
 
       it('should support detaching and attaching component views for dirty checking', () => {
         class AComp {

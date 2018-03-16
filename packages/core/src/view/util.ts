@@ -97,10 +97,12 @@ export function checkAndUpdateBinding(
 export function checkBindingNoChanges(
     view: ViewData, def: NodeDef, bindingIdx: number, value: any) {
   const oldValue = view.oldValues[def.bindingIndex + bindingIdx];
-  if ((view.state & ViewState.BeforeFirstCheck) || !devModeEqual(oldValue, value)) {
+  const unwrappedOldValue =
+      WrappedValue.isWrapped(oldValue) ? WrappedValue.unwrap(oldValue) : oldValue;
+  if ((view.state & ViewState.BeforeFirstCheck) || !devModeEqual(unwrappedOldValue, value)) {
     const bindingName = def.bindings[bindingIdx].name;
     throw expressionChangedAfterItHasBeenCheckedError(
-        Services.createDebugContext(view, def.nodeIndex), `${bindingName}: ${oldValue}`,
+        Services.createDebugContext(view, def.nodeIndex), `${bindingName}: ${unwrappedOldValue}`,
         `${bindingName}: ${value}`, (view.state & ViewState.BeforeFirstCheck) !== 0);
   }
 }
