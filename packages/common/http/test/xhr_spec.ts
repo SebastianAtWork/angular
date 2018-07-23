@@ -12,7 +12,7 @@ import {toArray} from 'rxjs/operators';
 
 import {HttpRequest} from '../src/request';
 import {HttpDownloadProgressEvent, HttpErrorResponse, HttpEvent, HttpEventType, HttpHeaderResponse, HttpResponse, HttpResponseBase, HttpUploadProgressEvent} from '../src/response';
-import {HttpXhrBackend} from '../src/xhr';
+import {HttpXhrBackend, JsonParser} from '../src/xhr';
 
 import {MockXhrFactory} from './xhr_mock';
 
@@ -34,7 +34,7 @@ const XSSI_PREFIX = ')]}\'\n';
     let backend: HttpXhrBackend = null !;
     beforeEach(() => {
       factory = new MockXhrFactory();
-      backend = new HttpXhrBackend(factory);
+      backend = new HttpXhrBackend(factory, JSON);
     });
     it('emits status immediately', () => {
       const events = trackEvents(backend.handle(TEST_POST));
@@ -94,6 +94,15 @@ const XSSI_PREFIX = ')]}\'\n';
       expect(events.length).toBe(2);
       const res = events[1] as HttpResponse<{data: string}>;
       expect(res.body !.data).toBe('some data');
+    });
+    it('supports custom json parser', () => {
+      const parser: JsonParser = {parse() { return 'JSON_RESULT'; }};
+      backend = new HttpXhrBackend(factory, parser);
+      const events = trackEvents(backend.handle(TEST_POST.clone({responseType: 'json'})));
+      factory.mock.mockFlush(200, 'OK', JSON.stringify({data: 'NOT USED'}));
+      expect(events.length).toBe(2);
+      const res = events[1] as HttpResponse<string>;
+      expect(res.body).toBe('JSON_RESULT');
     });
     it('handles a blank json response', () => {
       const events = trackEvents(backend.handle(TEST_POST.clone({responseType: 'json'})));
